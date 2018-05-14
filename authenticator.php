@@ -109,6 +109,7 @@ END;
         session_start();
         $_SESSION['un'] = $username;
         $_SESSION['unid'] = $id;
+        $_SESSION['type'] = $utype;
         echo $_SESSION['un']."<br>";
         $_SESSION['check'] = hash('ripemd128', $_SERVER['REMOTE_ADDR'] .
         $_SERVER['HTTP_USER_AGENT']);

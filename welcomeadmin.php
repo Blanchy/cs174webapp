@@ -3,9 +3,23 @@ session_start();
 //echo session_id();
 if (isset($_SESSION['un'])) {
     echo 'Current user: '.$_SESSION['un'].'<br>';
+   if (!($_SESSION['type'])==0) {
+        if (($_SESSION['type'])==1) {
+            require_once("welcomeuser.php");
+            exit;
+        }
+        else {
+            echo "You are not authorized to view this page. Please log in again.";
+            require_once("logout.php");
+            exit;
+        }
+   }
 }
 else {
     echo 'No user set.<br>';
+    echo "You are not authorized to view this page. Please log in again.";
+        require_once("logout.php");
+        exit;
 }
 
 ?>
