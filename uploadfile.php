@@ -21,8 +21,33 @@ if (isset($_SESSION['un'])) {
         <title>Upload File for Analysis</title>
     </head>
 <body>
+
+<?php
+
+if ($_FILES && $_FILES['infile']['type']) {
+    echo "Recieved file.  <br>  ";
+
+    //// INVALID FILE
+    if ($_FILES['infile']['type'] != 'text/plain') {
+        echo 'Invalid file. Txt accepted only.<br>';
+    }
+
+    //// VALID FILE
+    else {
+        echo 'Valid file. <br>';
+        require_once("malwareanalysis.php");    
+        };
+    }
+//// NO FILE RECIEVED
+else {
+    echo "Upload a file to begin analysis.<br>";
+}
+
+?>
+
+
     <div>
-    <form action="fileresults.php"
+    <form action="uploadfile.php"
         method="post"
         enctype="multipart/form-data">
         <fieldset>

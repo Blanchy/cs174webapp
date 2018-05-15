@@ -1,5 +1,4 @@
 <?php
-//echo session_id();
 if (isset($_SESSION['un'])) {
     echo 'Current user: '.$_SESSION['un'].'<br>On the login page?';
     require_once("logout.php");
@@ -16,12 +15,14 @@ else {
         <meta charset="UTF-8">
         <title>Log in or register</title>
     </head>
+    <script src="formvalidation.js"></script>
 <body>
     <h1>Malware Analysis</h1>
     <h3>You are not logged in. Log in or register below.</h3>
     <form action="authenticator.php"
         method="post"
-        enctype="multipart/form-data">
+        enctype="multipart/form-data"
+        onsubmit="return valSignin(this)">
         <fieldset>
             <legend>Login to an Existing Account</legend>
             <p>
@@ -40,7 +41,8 @@ else {
 
     <form action="accountcreation.php"
         method="post"
-        enctype="multipart/form-data">
+        enctype="multipart/form-data"
+        onsubmit="return valSignup(this)">
         <fieldset>
             <legend>Create a New Account</legend>
             <p>Usernames must be alphanumeric.</p>
