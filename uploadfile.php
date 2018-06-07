@@ -1,9 +1,25 @@
 <?php
-session_start();
-//echo session_id();
+/**
+ * 
+ * Blanchy Polangcos
+ * 
+ * Upload file to be analyzed. Invokes malwareanalysis
+ * 
+ */
+if(session_id() == '') {
+    session_start();
+}
+
+if ($_SESSION['check'] != hash('ripemd128', $_SERVER['REMOTE_ADDR'] .
+    $_SERVER['HTTP_USER_AGENT'])) {
+        echo "Your current location does not match the one given for this session. Try logging in again.";
+        require_once("logout.php");
+        exit;
+    }
+
 if (isset($_SESSION['un'])) {
     echo 'Current user: '.$_SESSION['un'].'<br>';
-   if (!($_SESSION['type'])==0 || !($_SESSION['type'])==1) {
+   if (!($_SESSION['type'])==0 && !($_SESSION['type'])==1) {
         
     echo 'No user set.<br>';
     echo "You are not authorized to view this page. Please log in again.";
@@ -34,9 +50,30 @@ if ($_FILES && $_FILES['infile']['type']) {
 
     //// VALID FILE
     else {
-        echo 'Valid file. <br>';
-        require_once("malwareanalysis.php");    
+        $f = $_FILES['infile']['tmp_name'];
+        $fh = fopen($f,'r') or die("Could not open file.");
+        //echo 'Valid file. <br>';
+            if (flock($fh, LOCK_EX)) {
+                require_once("malwareanalysis.php"); 
+                $matches = isMalware($fh);
+                flock($fh,LOCK_UN);
+            }  
+        fclose($fh);
         };
+        if (count($matches) > 0) {
+            $str =  "<p>The following malwares were found: 
+                    <ul>";
+                foreach ($matches as $name) {
+                    $str .= "<li>$name</li>";
+                }
+            $str .= "</ul></p>";
+            echo $str;
+        }
+        else {
+            echo <<<END
+                <p>No matches found in the database for this file.</p>
+END;
+        }
     }
 //// NO FILE RECIEVED
 else {
@@ -68,7 +105,7 @@ else {
         echo <<<END
         <form>
         <input type="button" 
-            value="Continue to site" 
+            value="Return home" 
             onclick="window.location.href='welcomeadmin.php'" />
         </form>
 END;
@@ -77,7 +114,7 @@ END;
         echo <<<END
         <form>
         <input type="button" 
-            value="Continue to site" 
+            value="Return home" 
             onclick="window.location.href='welcomeuser.php'" />
         </form>
 END;

@@ -1,7 +1,11 @@
 <?php
-//error_reporting(E_ALL);
-//ini_set('display_errors', 1);
-
+/**
+ * 
+ * Blanchy Polangcos
+ * 
+ * Account creation.
+ * 
+ */
 if (isset($_SESSION['un'])) {
     echo 'Current user: '.$_SESSION['un'].'<br>On the creation page?';
     require_once("disconnect.php");
@@ -18,30 +22,27 @@ if (isset($_SESSION['un'])) {
 <body>
 
 <?php
-
     
     $newUn = $_POST["nuname"];
     $nuPw = $_POST["npword"];
     $nuPw2 = $_POST["npword2"];
     $email = $_POST["emaddr"];
 
-    echo 'usr = '.$newUn.'<br>pw1 = '.$nuPw.'<br>pw2 = '.$nuPw2.'<br>';
-
+    /**
+     * sanitize string
+     */
     function sanitize($s) {
+        if (!is_string($s)) {
+            die("Error: need a string");
+        }
         if (get_magic_quotes_gpc()) $s = stripslashes($s);
         $s = strip_tags($s);
         return htmlentities($s);
     }
 
-    function is_alphanumeric($str) {    
-        if (!preg_match('/[^A-Za-z0-9]/', $str)) // '/[^a-z\d]/i' should also work.
-        {
-            echo "string contains only english letters & digits<br>";
-            return true;
-        }
-        else return false;
-    }
-
+    /**
+     * generate salts
+     */
     function saltShaker($length) {
         if (is_numeric($length)) {
             $charset = "qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM1234567890";
@@ -53,6 +54,9 @@ if (isset($_SESSION['un'])) {
         }
     }
 
+    /**
+     * hash password
+     */
     function create_pw($s1, $s2, $pw) {
         return hash('ripemd128',$s1.$pw.$s2);
     }
@@ -61,36 +65,23 @@ if (isset($_SESSION['un'])) {
         return "ERROR OCCURED: ".mysql_error();
      }
 
-    if (strlen($newUn) < 3 || strlen($nuPw) < 6 || strlen($nuPw2) < 6 || strlen($newUn) > 10) {
-        echo 'Could not create account. <br>
-        Usernames must be alphanumeric with a length of 3-10 characters. <br>
-        Passwords must be at least 6 characters long.';
+    /**
+     * validate syntax
+     */
+    require_once("loginsyntax.php");
+    if (!valSignup($newUn, $nuPw, $nuPw2, $email)) {
+        echo "Error creating account. Try signing up again.<br>";
         exit;
-    }
-    if (is_alphanumeric($newUn)) {
-        echo 'Username is valid.<br>';
-        $newUn = sanitize($newUn);
     }
     else {
-        echo 'Invalid username.<br>';
-        exit;
-    }
-
-    if ($nuPw === $nuPw2) {
-        echo 'Passwords match.<br>';
         $nuPw = sanitize($nuPw);
-    }
-    else {
-        echo 'Passwords do not match.<br>';
-        exit;
+        $newUn = sanitize($newUn);
     }
 
     $s1 = (saltShaker(4));
     $s2 = (saltShaker(4));
     $hashpw = create_pw($s1, $s2, $nuPw);
     $utype = 1;
-
-    echo 's1 = '.$s1.'<br>s2 = '.$s2.'<br>hash = '.$hashpw;
     
     require_once("dbproperties.php");
     $conn = new mysqli($host, $un, $pw, $db);
@@ -98,8 +89,10 @@ if (isset($_SESSION['un'])) {
         print_error();
         die($conn->connect_error);
     }
-    else echo 'Connected to database... creating account';
     
+    /**
+     * check if username exists
+     */
     $query = "SELECT * FROM $usertb where username = '$newUn'";
     $result = $conn->query($query);
     if (!$result) {
@@ -112,13 +105,9 @@ if (isset($_SESSION['un'])) {
         exit;
     }
 
-    echo "password hash: $hashpw";
     $stmt = $conn->prepare('INSERT INTO '.$usertb.' VALUES(NULL,?,?,?,?,?,?)');
     $stmt->bind_param('ssssss',$email, $newUn, $hashpw, $s1, $s2, $utype);
     $stmt->execute();
-
-    printf("%d Row inserted.\n", $stmt->affected_rows);
-
     $stmt->close();
     $conn->close();
     $result->close();

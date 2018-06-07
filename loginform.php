@@ -1,4 +1,10 @@
 <?php
+/**
+ * 
+ * Blanchy Polangcos
+ * The main page. Goes to accountcreation or authenticator.
+ * 
+ */
 if (isset($_SESSION['un'])) {
     echo 'Current user: '.$_SESSION['un'].'<br>On the login page?';
     require_once("logout.php");
@@ -15,7 +21,7 @@ else {
         <meta charset="UTF-8">
         <title>Log in or register</title>
     </head>
-    <script src="formvalidation.js"></script>
+    <script type="text/javascript" src="formvalidation1.js"></script>
 <body>
     <h1>Malware Analysis</h1>
     <h3>You are not logged in. Log in or register below.</h3>
@@ -40,12 +46,13 @@ else {
     </form>
 
     <form action="accountcreation.php"
-        method="post"
+    method="post"
         enctype="multipart/form-data"
         onsubmit="return valSignup(this)">
         <fieldset>
             <legend>Create a New Account</legend>
-            <p>Usernames must be alphanumeric.</p>
+            <p>Usernames must be alphanumeric and/or have dashes and underscores.<br>
+            Passwords must be at least 6 characters long, have upper and lowercase letters, a number, and a special character of either !, #, $.</p>
             <p>
                 <label>Username: </label><br>
                 <input type="text" name="nuname" id="nuname">

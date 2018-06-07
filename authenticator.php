@@ -1,12 +1,16 @@
 <?php
+/**
+ * 
+ * Blanchy Polangcos
+ * 
+ * Authentication. Leads to continue.
+ * 
+ */
     if (isset($_SESSION['un'])) {
         echo 'Current user: '.$_SESSION['un'].'<br>There is already a user set. 
         To prevent additional issues, diconnecting now... try logging in again';
         require_once('logout.php');
         exit;
-    }
-    else {
-        echo 'First time running authenticator';
     }
 
     //$conn = new mysqli($hn, $un, $pw, $db);
@@ -28,6 +32,9 @@
         }
     }
 
+    /**
+     * sanitize strings
+     */
     function sanitize($s) {
         if (get_magic_quotes_gpc()) $s = stripslashes($s);
         $s = strip_tags($s);
@@ -45,6 +52,9 @@
        return "ERROR OCCURED: ".mysql_error();
     }
 
+    /**
+     * in case of incorrect login
+     */
     function redirect_to_login() {
         echo <<<END
         <h4>Wrong credentials. Please try again.</h4>
@@ -55,12 +65,13 @@ END;
         exit;
     }
 
-    // sanitize
-    if (strlen($un) > 0 && strlen($pw) > 0) {
-        $temp_un = sanitize($un);
-    }
-    else {
-        echo "One or more fields were empty";
+    /**
+     * validate syntax
+     */
+    require_once("loginsyntax.php");
+    if (!valSignin($un, $pw)) {
+        echo "Error logging into account. Try again.<br>";
+        exit;
     }
     
     $sanUn = sanitize($un);
@@ -97,16 +108,19 @@ END;
     $result->data_seek(0);
     $hash = $result->fetch_assoc()['hashpw'];
     $result->close();
-    echo "id: $id<br>salt 1: $s1<br>salt 2: $s2<br>type: $utype<br>hash: $hash<br>";
+    $conn->close();
+    //echo "id: $id<br>salt 1: $s1<br>salt 2: $s2<br>type: $utype<br>hash: $hash<br>";
 
     $testPw = hash('ripemd128',$s1.$sanPw.$s2);
 
     // if session, direct
     // else print login
-    echo "$testPw vs $hash";
+    //echo "$testPw vs $hash";
     if ($testPw == $hash) {
-        echo 'creating session for...';
-        session_start();
+        //echo 'creating session for...';
+        if(session_id() == '') {
+            session_start();
+        }
         $_SESSION['un'] = $username;
         $_SESSION['unid'] = $id;
         $_SESSION['type'] = $utype;
@@ -114,7 +128,7 @@ END;
         $_SESSION['check'] = hash('ripemd128', $_SERVER['REMOTE_ADDR'] .
         $_SERVER['HTTP_USER_AGENT']);
     
-        echo "You have been logged in. Please click to continue. Do not reload this page.";
+        echo "You have been logged in. Please click to continue. Do not reload this page.<br>";
         require_once('continue.php');
         exit;
         //header("Location: continue.php");
